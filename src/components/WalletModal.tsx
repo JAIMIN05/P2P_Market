@@ -1,75 +1,128 @@
-import React, { useState, useEffect } from "react";
-import { HashConnect, HashConnectTypes } from "hashconnect";
+import React, { useState } from "react";
+import { X, Wallet } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const APP_METADATA = {
-  name: "My Hedera Dapp",
-  description: "A decentralized application on Hedera",
-  icon: "https://www.example.com/icon.png", // Replace with your icon URL
+interface WalletModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// Define wallet profiles
+type WalletProfiles = {
+  [key: string]: {
+    userName: string;
+    balance: string;
+    email: string;
+  };
 };
 
-const WalletConnect = () => {
-  const [hashConnect, setHashConnect] = useState<HashConnect | null>(null);
-  const [pairedWallet, setPairedWallet] = useState<string | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+const WALLET_PROFILES: WalletProfiles = {
+  "0.0.5664999": {
+    userName: "Jaimin Kaneriya",
+    balance: "1000 HBAR",
+    email: "jaiminkaneriya@gmail.com"
+  },
+  "0.0.5664975": {
+    userName: "Jay",
+    balance: "200 HBAR",
+    email: "jay@gmail.com"
+  },
+  "0.0.5664977": {
+    userName: "Prathm",
+    balance: "500 HBAR",
+    email: "prathm@gmail.com"
+  }
+};
 
-  useEffect(() => {
-    initHashConnect();
-  }, []);
+const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
+  const [showAddressInput, setShowAddressInput] = useState(false);
+  const [accountId, setAccountId] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const initHashConnect = async () => {
-    const hashconnect = new HashConnect();
-
-    // Store the instance in state
-    setHashConnect(hashconnect);
-
-    // Ledger ID: Use "mainnet" for production
-    const ledgerId= "testnet";
-
-    // Initialize HashConnect
-    const initData = await hashconnect.init(APP_METADATA, ledgerId, true);
-
-    // If a pairing already exists, set it
-    hashconnect.pairingEvent.on((pairingData) => {
-      if (pairingData.accountIds.length > 0) {
-        setPairedWallet(pairingData.accountIds[0]);
-        setIsConnected(true);
-      }
-    });
-
-    // Attempt auto-reconnect if previously paired
-    if (initData.pairingData.length > 0) {
-      setPairedWallet(initData.pairingData[0].accountIds[0]);
-      setIsConnected(true);
+  const handleConnect = () => {
+    const profile = WALLET_PROFILES[accountId];
+    
+    if (profile) {
+      localStorage.setItem(
+        "walletInfo",
+        JSON.stringify({
+          accountId: accountId,
+          userName: profile.userName,
+          connected: true,
+          balance: profile.balance,
+          email: profile.email,
+        })
+      );
+      
+      onClose();
+      navigate("/profile");
+    } else {
+      setError("Invalid account ID. Please try again.");
     }
   };
 
-  const connectWallet = async () => {
-    if (!hashConnect) return;
-
-    // Generate a pairing code and connect to HashPack
-    const topic = await hashConnect.connectToLocalWallet();
-    console.log("Pairing topic:", topic);
+  const handleShowAddressInput = () => {
+    setShowAddressInput(true);
   };
 
-  const disconnectWallet = () => {
-    setPairedWallet(null);
-    setIsConnected(false);
-    hashConnect?.disconnect();
-  };
+  if (!isOpen) return null;
 
   return (
-    <div className="wallet-container">
-      <h2>Connect to HashPack Wallet</h2>
-      {isConnected ? (
-        <div>
-          <p>Connected Wallet: {pairedWallet}</p>
-          <button onClick={disconnectWallet}>Disconnect</button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+        >
+          <X className="h-6 w-6" />
+        </button>
+
+        <h2 className="text-2xl font-bold mb-4">Connect Wallet</h2>
+        
+        <div className="space-y-4">
+          {!showAddressInput ? (
+            <button
+              onClick={handleShowAddressInput}
+              className="w-full flex items-center justify-center space-x-2 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition"
+            >
+              <Wallet className="h-5 w-5" />
+              <span>Connect with HashPack</span>
+            </button>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hedera Account ID
+                </label>
+                <input
+                  type="text"
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                  placeholder="Enter your Hedera account ID"
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Try: 0.0.5664999 or 0.0.5664975
+                </p>
+              </div>
+
+              {error && (
+                <p className="text-red-600 text-sm">{error}</p>
+              )}
+
+              <button
+                onClick={handleConnect}
+                className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition"
+              >
+                Connect Wallet
+              </button>
+            </>
+          )}
         </div>
-      ) : (
-        <button onClick={connectWallet}>Connect HashPack</button>
-      )}
+      </div>
     </div>
   );
 };
 
-export default WalletConnect;
+export default WalletModal;

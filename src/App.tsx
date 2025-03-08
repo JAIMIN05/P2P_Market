@@ -4,7 +4,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import ProductDetails from './pages/ProductDetails';
 import ListProduct from './pages/ListProduct';
-import Profile from './pages/Profile';
+import Profile from './components/Profile';
 
 function App() {
   return (
