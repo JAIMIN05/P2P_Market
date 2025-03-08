@@ -19,17 +19,17 @@ type WalletProfiles = {
 const WALLET_PROFILES: WalletProfiles = {
   "0.0.5664999": {
     userName: "Jaimin Kaneriya",
-    balance: "1000 HBAR",
+    balance: "50 HBAR",
     email: "jaiminkaneriya@gmail.com"
   },
   "0.0.5664975": {
     userName: "Jay",
-    balance: "200 HBAR",
+    balance: "10 HBAR",
     email: "jay@gmail.com"
   },
   "0.0.5664977": {
     userName: "Prathm",
-    balance: "500 HBAR",
+    balance: "20 HBAR",
     email: "prathm@gmail.com"
   }
 };
